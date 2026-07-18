@@ -23,6 +23,31 @@ public:
 
 	void CleanupLuaStates(bool bIsSimulating);
 	void UnregisterLuaState(ULuaState* LuaState);
+	/**
+	 * Select an existing state instance for class-based Blueprint dispatch.
+	 *
+	 * LuaMachine historically creates one state per class. Runtime systems that
+	 * retain multiple isolated instances (for example, persistent game boards)
+	 * can use this to switch which instance class-based nodes address without
+	 * destroying the inactive states.
+	 */
+	FORCEINLINE bool ActivateLuaState(ULuaState* LuaState)
+	{
+		if (!IsValid(LuaState) || LuaState->HasAnyFlags(RF_ClassDefaultObject)
+			|| LuaState->GetClass() == ULuaState::StaticClass())
+		{
+			return false;
+		}
+
+		const TSubclassOf<ULuaState> LuaStateClass = LuaState->GetClass();
+		if (LuaStates.FindRef(LuaStateClass) == LuaState)
+		{
+			return true;
+		}
+		LuaStates.Add(LuaStateClass, LuaState);
+		OnRegisteredLuaStatesChanged.Broadcast();
+		return true;
+	}
 
 	ULuaState* GetLuaState(TSubclassOf<ULuaState> LuaStateClass, UWorld* InWorld, bool bCheckOnly=false);
 
