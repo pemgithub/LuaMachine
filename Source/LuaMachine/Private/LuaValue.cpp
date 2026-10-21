@@ -386,7 +386,6 @@ TSharedPtr<FJsonValue> FLuaValue::ToJsonValue()
 		auto JsonValueObject = MakeShared<FJsonValueObject>(JsonObject);
 		return JsonValueObject;
 	}
-	return MakeShared<FJsonValueNull>();
 	}
 
 	return MakeShared<FJsonValueNull>();
