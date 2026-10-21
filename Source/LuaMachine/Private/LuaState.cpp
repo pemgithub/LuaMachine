@@ -1567,20 +1567,30 @@ int ULuaState::TableFunction_package_preload(lua_State * L)
 	ULuaCode** LuaCodePtr = LuaState->RequireTable.Find(Key);
 	if (!LuaCodePtr)
 	{
-		if (LuaState->bAddProjectContentDirToPackagePath && LuaState->RunFile(Key + ".lua", true, 1))
+		const FString Filename = Key + ".lua";
+		if (LuaState->bAddProjectContentDirToPackagePath &&
+			FPaths::FileExists(FPaths::Combine(FPaths::ProjectContentDir(), Filename)))
 		{
-			return 1;
-		}
-
-		// now search in additional paths
-		for (FString AdditionalPath : LuaState->AppendProjectContentDirSubDir)
-		{
-			if (LuaState->RunFile(AdditionalPath / Key + ".lua", true, 1))
+			if (LuaState->RunFile(Filename, false, 1))
 			{
 				return 1;
 			}
 			return luaL_error(L, "%s", lua_tostring(L, -1));
+		}
 
+		// now search in additional paths
+		for (const FString& AdditionalPath : LuaState->AppendProjectContentDirSubDir)
+		{
+			const FString AdditionalFilename = AdditionalPath / Filename;
+			if (!FPaths::FileExists(FPaths::Combine(FPaths::ProjectContentDir(), AdditionalFilename)))
+			{
+				continue;
+			}
+			if (LuaState->RunFile(AdditionalFilename, false, 1))
+			{
+				return 1;
+			}
+			return luaL_error(L, "%s", lua_tostring(L, -1));
 		}
 		return luaL_error(L, "unable to find package %s", TCHAR_TO_ANSI(*Key));
 	}
