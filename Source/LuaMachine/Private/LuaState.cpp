@@ -627,7 +627,6 @@ void ULuaState::FromLuaValue(FLuaValue& LuaValue, UObject* CallContext, lua_Stat
 			lua_setmetatable(State, -2);
 			return;
 		}
-		break;
 	default:
 		lua_pushnil(State);
 	}
